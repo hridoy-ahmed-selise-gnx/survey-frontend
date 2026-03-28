@@ -10,7 +10,7 @@ export function useLogin() {
   return useMutation({
     mutationFn: async (credentials: LoginRequest) => {
       const { data } = await apiClient.post<ApiResponse<LoginResponse>>(
-        "/api/auth/login",
+        "/auth/login",
         credentials
       );
       if (!data.success || !data.data) {

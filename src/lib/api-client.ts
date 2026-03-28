@@ -1,10 +1,12 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import type { ApiResponse } from "@/types/api";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5123";
+const API_VERSION = "v1";
+const API_BASE = `${BASE_URL}/api/${API_VERSION}`;
 
 export const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_BASE,
   headers: { "Content-Type": "application/json" },
   timeout: 30_000,
 });
@@ -34,7 +36,7 @@ apiClient.interceptors.response.use(
         try {
           const { data } = await axios.post<
             ApiResponse<{ accessToken: string; refreshToken: string }>
-          >(`${BASE_URL}/api/auth/refresh`, { refreshToken });
+          >(`${API_BASE}/auth/refresh`, { refreshToken });
 
           if (data.success && data.data) {
             localStorage.setItem("access_token", data.data.accessToken);
