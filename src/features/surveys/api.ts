@@ -61,6 +61,36 @@ export function usePublishSurvey() {
   });
 }
 
+export function useCloseSurvey() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await apiClient.post<ApiResponse<SurveyDto>>(`/surveys/${id}/close`);
+      if (!data.success) throw new Error(data.error ?? "Failed to close survey");
+      return data.data!;
+    },
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: ["surveys", id] });
+    },
+  });
+}
+
+export function useDeleteSurvey() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await apiClient.delete<ApiResponse<boolean>>(`/surveys/${id}`);
+      if (!data.success) throw new Error(data.error ?? "Failed to delete survey");
+      return data.data!;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
 export function useCreateQuestion() {
   const queryClient = useQueryClient();
   return useMutation({

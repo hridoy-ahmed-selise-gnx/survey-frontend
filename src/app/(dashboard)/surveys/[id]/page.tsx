@@ -5,29 +5,27 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Plus,
-  GripVertical,
-  Settings2,
   Eye,
   Send,
   Trash2,
+  XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSurvey, usePublishSurvey } from "@/features/surveys/api";
+import {
+  useSurvey,
+  usePublishSurvey,
+  useCloseSurvey,
+  useDeleteSurvey,
+} from "@/features/surveys/api";
 import { AddQuestionDialog } from "@/features/surveys/builder/add-question-dialog";
 import { QuestionCard } from "@/features/surveys/builder/question-card";
+import { SurveyPreviewDialog } from "@/features/surveys/preview/survey-preview-dialog";
+import { DeleteSurveyDialog } from "@/features/surveys/delete-survey-dialog";
+import { PublishSurveyDialog } from "@/features/surveys/publish-survey-dialog";
 import type { SurveyStatus } from "@/types/survey";
 
 const statusVariant: Record<SurveyStatus, "default" | "secondary" | "destructive" | "outline"> = {
@@ -46,7 +44,13 @@ export default function SurveyDetailPage({
   const router = useRouter();
   const { data, isLoading } = useSurvey(id);
   const publishSurvey = usePublishSurvey();
+  const closeSurvey = useCloseSurvey();
+  const deleteSurvey = useDeleteSurvey();
+
   const [addQuestionOpen, setAddQuestionOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const survey = data?.data;
 
@@ -66,9 +70,31 @@ export default function SurveyDetailPage({
 
   const handlePublish = () => {
     publishSurvey.mutate(id, {
-      onSuccess: () => toast.success("Survey published successfully"),
+      onSuccess: () => {
+        toast.success("Survey published successfully");
+        setPublishDialogOpen(false);
+      },
       onError: (err) =>
         toast.error(err instanceof Error ? err.message : "Failed to publish"),
+    });
+  };
+
+  const handleClose = () => {
+    closeSurvey.mutate(id, {
+      onSuccess: () => toast.success("Survey closed"),
+      onError: (err) =>
+        toast.error(err instanceof Error ? err.message : "Failed to close survey"),
+    });
+  };
+
+  const handleDelete = () => {
+    deleteSurvey.mutate(id, {
+      onSuccess: () => {
+        toast.success("Survey deleted");
+        router.push("/surveys");
+      },
+      onError: (err) =>
+        toast.error(err instanceof Error ? err.message : "Failed to delete survey"),
     });
   };
 
@@ -88,18 +114,44 @@ export default function SurveyDetailPage({
           )}
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPreviewOpen(true)}
+          >
             <Eye className="mr-2 h-4 w-4" />
             Preview
           </Button>
           {survey.status === "Draft" && (
             <Button
               size="sm"
-              onClick={handlePublish}
+              onClick={() => setPublishDialogOpen(true)}
               disabled={publishSurvey.isPending || survey.questions.length === 0}
             >
               <Send className="mr-2 h-4 w-4" />
               Publish
+            </Button>
+          )}
+          {survey.status === "Published" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleClose}
+              disabled={closeSurvey.isPending}
+            >
+              <XCircle className="mr-2 h-4 w-4" />
+              Close
+            </Button>
+          )}
+          {survey.status !== "Published" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDeleteDialogOpen(true)}
+              disabled={deleteSurvey.isPending}
+            >
+              <Trash2 className="mr-2 h-4 w-4 text-destructive" />
+              Delete
             </Button>
           )}
         </div>
@@ -182,6 +234,29 @@ export default function SurveyDetailPage({
           </Card>
         </TabsContent>
       </Tabs>
+
+      <SurveyPreviewDialog
+        survey={survey}
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+      />
+
+      <PublishSurveyDialog
+        open={publishDialogOpen}
+        onOpenChange={setPublishDialogOpen}
+        surveyTitle={survey.title}
+        questionCount={survey.questions.length}
+        onConfirm={handlePublish}
+        isPending={publishSurvey.isPending}
+      />
+
+      <DeleteSurveyDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        surveyTitle={survey.title}
+        onConfirm={handleDelete}
+        isPending={deleteSurvey.isPending}
+      />
     </div>
   );
 }
