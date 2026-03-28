@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   FileText,
@@ -11,20 +11,28 @@ import {
   Shield,
   LogOut,
 } from "lucide-react";
-import { cn } from "@/lib/cn";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/features/auth/auth-store";
 
-const navigation = [
+const navigation: {
+  name: string;
+  href: string;
+  icon: typeof LayoutDashboard;
+  role?: string;
+}[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Surveys", href: "/surveys", icon: FileText },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Users", href: "/users", icon: Users, role: "Administrator" },
   { name: "Audit Logs", href: "/audit", icon: Shield, role: "Administrator" },
   { name: "Settings", href: "/settings", icon: Settings, role: "Administrator" },
-] as const;
+];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
 
@@ -32,10 +40,15 @@ export function Sidebar() {
     (item) => !item.role || user?.roles.includes(item.role)
   );
 
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+
   return (
-    <aside className="flex h-screen w-64 flex-col border-r border-gray-200 bg-white">
-      <div className="flex h-16 items-center border-b border-gray-200 px-6">
-        <h1 className="text-lg font-semibold text-gray-900">Survey Platform</h1>
+    <aside className="flex h-screen w-64 flex-col border-r bg-background">
+      <div className="flex h-16 items-center border-b px-6">
+        <h1 className="text-lg font-semibold">Survey Platform</h1>
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4">
@@ -48,8 +61,8 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-muted text-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
               <item.icon className="h-5 w-5" />
@@ -59,17 +72,19 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-gray-200 p-4">
-        <div className="mb-3 truncate text-sm text-gray-600">
+      <Separator />
+
+      <div className="p-4">
+        <p className="mb-2 truncate text-sm text-muted-foreground">
           {user?.fullName}
-        </div>
-        <button
-          onClick={logout}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-        >
-          <LogOut className="h-4 w-4" />
+        </p>
+        <p className="mb-3 truncate text-xs text-muted-foreground">
+          {user?.email}
+        </p>
+        <Button variant="ghost" size="sm" className="w-full justify-start" onClick={handleLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
           Sign out
-        </button>
+        </Button>
       </div>
     </aside>
   );
