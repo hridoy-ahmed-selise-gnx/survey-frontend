@@ -92,6 +92,26 @@ export interface CreateQuestionRequest {
   readonly options?: readonly CreateAnswerOptionRequest[];
 }
 
+export interface UpdateQuestionRequest {
+  readonly surveyId: string;
+  readonly questionId: string;
+  readonly title: string;
+  readonly description?: string;
+  readonly isRequired: boolean;
+  readonly config?: Record<string, unknown>;
+  readonly options?: readonly UpdateAnswerOptionRequest[];
+}
+
+export interface UpdateAnswerOptionRequest {
+  readonly id?: string;
+  readonly label: string;
+  readonly value?: string;
+  readonly sortOrder: number;
+  readonly mediaUrl?: string;
+  readonly isOther: boolean;
+  readonly config?: Record<string, unknown>;
+}
+
 export interface CreateAnswerOptionRequest {
   readonly label: string;
   readonly value?: string;

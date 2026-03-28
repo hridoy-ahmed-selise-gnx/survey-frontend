@@ -6,6 +6,7 @@ import type {
   SurveyDetailDto,
   CreateSurveyRequest,
   CreateQuestionRequest,
+  UpdateQuestionRequest,
   QuestionDto,
 } from "@/types/survey";
 
@@ -87,6 +88,56 @@ export function useDeleteSurvey() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useUpdateQuestion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (request: UpdateQuestionRequest) => {
+      const { data } = await apiClient.put<ApiResponse<QuestionDto>>(
+        `/surveys/${request.surveyId}/questions/${request.questionId}`,
+        request
+      );
+      if (!data.success) throw new Error(data.error ?? "Failed to update question");
+      return data.data!;
+    },
+    onSuccess: (_, request) => {
+      queryClient.invalidateQueries({ queryKey: ["surveys", request.surveyId] });
+    },
+  });
+}
+
+export function useDeleteQuestion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ surveyId, questionId }: { surveyId: string; questionId: string }) => {
+      const { data } = await apiClient.delete<ApiResponse<boolean>>(
+        `/surveys/${surveyId}/questions/${questionId}`
+      );
+      if (!data.success) throw new Error(data.error ?? "Failed to delete question");
+      return data.data!;
+    },
+    onSuccess: (_, { surveyId }) => {
+      queryClient.invalidateQueries({ queryKey: ["surveys", surveyId] });
+    },
+  });
+}
+
+export function useReorderQuestions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ surveyId, questions }: { surveyId: string; questions: readonly { questionId: string; sortOrder: number }[] }) => {
+      const { data } = await apiClient.post<ApiResponse<boolean>>(
+        `/surveys/${surveyId}/questions/reorder`,
+        { surveyId, questions }
+      );
+      if (!data.success) throw new Error(data.error ?? "Failed to reorder questions");
+      return data.data!;
+    },
+    onSuccess: (_, { surveyId }) => {
+      queryClient.invalidateQueries({ queryKey: ["surveys", surveyId] });
     },
   });
 }

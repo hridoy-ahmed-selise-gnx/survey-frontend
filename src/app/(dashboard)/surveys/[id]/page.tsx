@@ -22,7 +22,7 @@ import {
   useDeleteSurvey,
 } from "@/features/surveys/api";
 import { AddQuestionDialog } from "@/features/surveys/builder/add-question-dialog";
-import { QuestionCard } from "@/features/surveys/builder/question-card";
+import { SortableQuestionList } from "@/features/surveys/builder/sortable-question-list";
 import { SurveyPreviewDialog } from "@/features/surveys/preview/survey-preview-dialog";
 import { DeleteSurveyDialog } from "@/features/surveys/delete-survey-dialog";
 import { PublishSurveyDialog } from "@/features/surveys/publish-survey-dialog";
@@ -180,17 +180,11 @@ export default function SurveyDetailPage({
             </Card>
           ) : (
             <>
-              <div className="space-y-3">
-                {[...survey.questions]
-                  .sort((a, b) => a.sortOrder - b.sortOrder)
-                  .map((question, index) => (
-                    <QuestionCard
-                      key={question.id}
-                      question={question}
-                      index={index + 1}
-                    />
-                  ))}
-              </div>
+              <SortableQuestionList
+                surveyId={id}
+                questions={survey.questions}
+                isDraft={survey.status === "Draft"}
+              />
               <Button
                 variant="outline"
                 className="w-full"

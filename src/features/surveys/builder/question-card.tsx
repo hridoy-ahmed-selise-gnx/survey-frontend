@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
+import { toast } from "sonner";
 import {
   GripVertical,
-  Settings2,
+  Pencil,
   Trash2,
   CheckSquare,
   List,
@@ -21,6 +23,8 @@ import {
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useDeleteQuestion } from "@/features/surveys/api";
+import { EditQuestionDialog } from "@/features/surveys/builder/edit-question-dialog";
 import type { QuestionDto, QuestionType } from "@/types/survey";
 
 const questionTypeConfig: Record<
@@ -49,77 +53,116 @@ const questionTypeConfig: Record<
 };
 
 interface QuestionCardProps {
+  readonly surveyId: string;
   readonly question: QuestionDto;
   readonly index: number;
+  readonly isDraft: boolean;
+  readonly dragHandleProps?: Record<string, unknown>;
 }
 
-export function QuestionCard({ question, index }: QuestionCardProps) {
+export function QuestionCard({ surveyId, question, index, isDraft, dragHandleProps }: QuestionCardProps) {
   const config = questionTypeConfig[question.type];
   const Icon = config.icon;
+  const deleteQuestion = useDeleteQuestion();
+  const [editOpen, setEditOpen] = useState(false);
+
+  const handleDelete = () => {
+    deleteQuestion.mutate(
+      { surveyId, questionId: question.id },
+      {
+        onSuccess: () => toast.success("Question deleted"),
+        onError: (err) =>
+          toast.error(err instanceof Error ? err.message : "Failed to delete question"),
+      }
+    );
+  };
 
   return (
-    <Card className="group relative">
-      <CardHeader className="flex flex-row items-center gap-3 pb-2">
-        <button className="cursor-grab opacity-0 transition-opacity group-hover:opacity-100">
-          <GripVertical className="h-5 w-5 text-muted-foreground" />
-        </button>
+    <>
+      <Card className="group relative">
+        <CardHeader className="flex flex-row items-center gap-3 pb-2">
+          {isDraft && (
+            <button
+              className="cursor-grab opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing"
+              {...dragHandleProps}
+            >
+              <GripVertical className="h-5 w-5 text-muted-foreground" />
+            </button>
+          )}
 
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-medium">
-          {index}
-        </span>
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-medium">
+            {index}
+          </span>
 
-        <Badge variant="secondary" className={config.color}>
-          <Icon className="mr-1 h-3 w-3" />
-          {config.label}
-        </Badge>
-
-        {question.isRequired && (
-          <Badge variant="destructive" className="text-xs">
-            Required
+          <Badge variant="secondary" className={config.color}>
+            <Icon className="mr-1 h-3 w-3" />
+            {config.label}
           </Badge>
-        )}
 
-        <div className="ml-auto flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-          <Button variant="ghost" size="icon-sm">
-            <Settings2 className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon-sm">
-            <Trash2 className="h-4 w-4 text-destructive" />
-          </Button>
-        </div>
-      </CardHeader>
+          {question.isRequired && (
+            <Badge variant="destructive" className="text-xs">
+              Required
+            </Badge>
+          )}
 
-      <CardContent className="pl-16">
-        <p className="font-medium">{question.title}</p>
-        {question.description && (
-          <p className="mt-1 text-sm text-muted-foreground">{question.description}</p>
-        )}
-
-        {question.options.length > 0 && (
-          <div className="mt-3 space-y-1.5">
-            {question.options.map((option) => (
-              <div
-                key={option.id}
-                className="flex items-center gap-2 rounded border px-3 py-1.5 text-sm"
+          {isDraft && (
+            <div className="ml-auto flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+              <Button variant="ghost" size="icon-sm" onClick={() => setEditOpen(true)}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={handleDelete}
+                disabled={deleteQuestion.isPending}
               >
-                {option.mediaUrl && (
-                  <img
-                    src={option.mediaUrl}
-                    alt=""
-                    className="h-6 w-6 rounded object-cover"
-                  />
-                )}
-                <span>{option.label}</span>
-                {option.isOther && (
-                  <Badge variant="outline" className="ml-auto text-xs">
-                    Other
-                  </Badge>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          )}
+        </CardHeader>
+
+        <CardContent className="pl-16">
+          <p className="font-medium">{question.title}</p>
+          {question.description && (
+            <p className="mt-1 text-sm text-muted-foreground">{question.description}</p>
+          )}
+
+          {question.options.length > 0 && (
+            <div className="mt-3 space-y-1.5">
+              {question.options.map((option) => (
+                <div
+                  key={option.id}
+                  className="flex items-center gap-2 rounded border px-3 py-1.5 text-sm"
+                >
+                  {option.mediaUrl && (
+                    <img
+                      src={option.mediaUrl}
+                      alt=""
+                      className="h-6 w-6 rounded object-cover"
+                    />
+                  )}
+                  <span>{option.label}</span>
+                  {option.isOther && (
+                    <Badge variant="outline" className="ml-auto text-xs">
+                      Other
+                    </Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {isDraft && (
+        <EditQuestionDialog
+          surveyId={surveyId}
+          question={question}
+          open={editOpen}
+          onOpenChange={setEditOpen}
+        />
+      )}
+    </>
   );
 }
