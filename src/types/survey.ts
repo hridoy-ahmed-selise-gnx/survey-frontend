@@ -80,6 +80,13 @@ export interface CreateSurveyRequest {
   readonly defaultLanguage: string;
 }
 
+export interface UpdateSurveyRequest {
+  readonly title: string;
+  readonly description?: string;
+  readonly customCss?: string;
+  readonly customDomain?: string;
+}
+
 export interface CreateQuestionRequest {
   readonly surveyId: string;
   readonly sectionId?: string;

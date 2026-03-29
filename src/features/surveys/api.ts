@@ -5,6 +5,7 @@ import type {
   SurveyDto,
   SurveyDetailDto,
   CreateSurveyRequest,
+  UpdateSurveyRequest,
   CreateQuestionRequest,
   UpdateQuestionRequest,
   QuestionDto,
@@ -44,6 +45,21 @@ export function useCreateSurvey() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["surveys"] });
+    },
+  });
+}
+
+export function useUpdateSurvey() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...request }: { id: string } & UpdateSurveyRequest) => {
+      const { data } = await apiClient.put<ApiResponse<SurveyDto>>(`/surveys/${id}`, request);
+      if (!data.success) throw new Error(data.error ?? "Failed to update survey");
+      return data.data!;
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["surveys"] });
+      queryClient.invalidateQueries({ queryKey: ["surveys", id] });
     },
   });
 }
