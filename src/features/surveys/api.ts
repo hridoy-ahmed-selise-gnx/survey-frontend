@@ -9,6 +9,7 @@ import type {
   UpdateQuestionRequest,
   QuestionDto,
 } from "@/types/survey";
+import type { SurveyResponseDto } from "@/types/public-survey";
 
 export function useSurveys(params: PagedRequest = {}) {
   return useQuery({
@@ -156,5 +157,19 @@ export function useCreateQuestion() {
     onSuccess: (_, request) => {
       queryClient.invalidateQueries({ queryKey: ["surveys", request.surveyId] });
     },
+  });
+}
+
+export function useSurveyResponses(surveyId: string, params: { page?: number; limit?: number } = {}) {
+  return useQuery({
+    queryKey: ["survey-responses", surveyId, params],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ApiResponse<SurveyResponseDto[]>>(
+        `/surveys/${surveyId}/responses`,
+        { params: { page: params.page ?? 1, limit: params.limit ?? 20 } }
+      );
+      return data;
+    },
+    enabled: !!surveyId,
   });
 }

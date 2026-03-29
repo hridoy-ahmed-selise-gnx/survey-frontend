@@ -29,6 +29,7 @@ import { SurveyPreviewDialog } from "@/features/surveys/preview/survey-preview-d
 import { DeleteSurveyDialog } from "@/features/surveys/delete-survey-dialog";
 import { PublishSurveyDialog } from "@/features/surveys/publish-survey-dialog";
 import { ShareSurveyDialog } from "@/features/surveys/share-survey-dialog";
+import { ResponseList } from "@/features/surveys/responses/response-list";
 import type { SurveyStatus } from "@/types/survey";
 
 const statusVariant: Record<SurveyStatus, "default" | "secondary" | "destructive" | "outline"> = {
@@ -241,11 +242,7 @@ export default function SurveyDetailPage({
         </TabsContent>
 
         <TabsContent value="responses" className="mt-4">
-          <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">
-              Response analytics and data management.
-            </CardContent>
-          </Card>
+          <ResponseList surveyId={id} />
         </TabsContent>
       </Tabs>
 
