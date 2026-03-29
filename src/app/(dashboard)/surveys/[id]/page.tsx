@@ -2,6 +2,7 @@
 
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryState, parseAsStringLiteral } from "nuqs";
 import { toast } from "sonner";
 import {
   Plus,
@@ -48,6 +49,12 @@ export default function SurveyDetailPage({
   const publishSurvey = usePublishSurvey();
   const closeSurvey = useCloseSurvey();
   const deleteSurvey = useDeleteSurvey();
+
+  const tabValues = ["builder", "logic", "settings", "responses"] as const;
+  const [tab, setTab] = useQueryState(
+    "tab",
+    parseAsStringLiteral(tabValues).withDefault("builder")
+  );
 
   const [addQuestionOpen, setAddQuestionOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -170,7 +177,7 @@ export default function SurveyDetailPage({
         </div>
       </div>
 
-      <Tabs defaultValue="builder">
+      <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tabValues[number])}>
         <TabsList>
           <TabsTrigger value="builder">Builder</TabsTrigger>
           <TabsTrigger value="logic">Logic</TabsTrigger>
