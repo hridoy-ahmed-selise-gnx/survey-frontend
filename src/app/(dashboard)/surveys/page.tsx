@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, Search, Trash2, MoreHorizontal, Eye, BarChart3 } from "lucide-react";
+import { Plus, Search, Trash2, MoreHorizontal, Eye, BarChart3, Link2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -152,6 +152,22 @@ export default function SurveysPage() {
                               <BarChart3 className="mr-2 h-4 w-4" />
                               Analytics
                             </DropdownMenuItem>
+                            {survey.status === "Published" && (
+                              <DropdownMenuItem
+                                onClick={async () => {
+                                  const url = `${window.location.origin}/s/${survey.uniqueCode.toLowerCase()}`;
+                                  try {
+                                    await navigator.clipboard.writeText(url);
+                                    toast.success("Link copied to clipboard");
+                                  } catch {
+                                    toast.error("Failed to copy link");
+                                  }
+                                }}
+                              >
+                                <Link2 className="mr-2 h-4 w-4" />
+                                Copy Link
+                              </DropdownMenuItem>
+                            )}
                             {survey.status !== "Published" && (
                               <>
                                 <DropdownMenuSeparator />

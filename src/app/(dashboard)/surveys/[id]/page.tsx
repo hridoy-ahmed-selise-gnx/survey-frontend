@@ -9,6 +9,7 @@ import {
   Send,
   Trash2,
   XCircle,
+  Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,7 @@ import { SortableQuestionList } from "@/features/surveys/builder/sortable-questi
 import { SurveyPreviewDialog } from "@/features/surveys/preview/survey-preview-dialog";
 import { DeleteSurveyDialog } from "@/features/surveys/delete-survey-dialog";
 import { PublishSurveyDialog } from "@/features/surveys/publish-survey-dialog";
+import { ShareSurveyDialog } from "@/features/surveys/share-survey-dialog";
 import type { SurveyStatus } from "@/types/survey";
 
 const statusVariant: Record<SurveyStatus, "default" | "secondary" | "destructive" | "outline"> = {
@@ -51,6 +53,7 @@ export default function SurveyDetailPage({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   const survey = data?.data;
 
@@ -122,6 +125,16 @@ export default function SurveyDetailPage({
             <Eye className="mr-2 h-4 w-4" />
             Preview
           </Button>
+          {survey.status === "Published" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShareDialogOpen(true)}
+            >
+              <Share2 className="mr-2 h-4 w-4" />
+              Share
+            </Button>
+          )}
           {survey.status === "Draft" && (
             <Button
               size="sm"
@@ -250,6 +263,13 @@ export default function SurveyDetailPage({
         surveyTitle={survey.title}
         onConfirm={handleDelete}
         isPending={deleteSurvey.isPending}
+      />
+
+      <ShareSurveyDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        uniqueCode={survey.uniqueCode}
+        surveyTitle={survey.title}
       />
     </div>
   );
